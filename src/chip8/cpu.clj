@@ -3,19 +3,6 @@
 (defrecord CPU [opcode memory Vreg Ireg pc gfx delay-timer sound-timer stack sp key])
 
 (defn build-cpu []
-  (CPU. nil
-        (vec (repeat 4096 nil))
-        (vec (repeat 16 nil))
-        nil
-        nil
-        nil
-        nil
-        nil
-        (vec (repeat 16 nil))
-        nil
-        (vec (repeat 16 nil))))
-
-(defn build-cpu-map []
   (map->CPU {:opcode nil,
              :memory (sized-vec 4096),
              :Vreg (sized-vec 16),
