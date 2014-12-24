@@ -20,13 +20,18 @@
   "put new opcode in cpu for dynamic var"
   (assoc-in cpu [:opcode] opcode))
 
-(defn mem-insert [cpu position val]
+(defn mem-insert [cpu pos val]
   "insert value into memory"
-  (assoc-in cpu [:memory] (assoc (:memory cpu) position val)))
+  (assoc-in cpu [:memory] (assoc (:memory cpu) pos val)))
 
-(defn mem-get [cpu position]
+(defn mem-get [cpu pos]
   "grabs the value at the position in memory"
-  ())
+  (-> cpu :memory (get pos)))
+
+(defn mem-get-next-opcode [cpu]
+  (let [pc (:pc cpu)
+        memory (:memory cpu)]
+    (bit-or (get memory pc) (get memory (+ pc 1)))))
 
 (defn load-game [cpu game]
   "loads a game into the system")
