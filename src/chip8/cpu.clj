@@ -17,7 +17,7 @@
              :key (sized-vec 16)}))
 
 (defn change-opcode [cpu opcode]
-  "put new opcode in cpu"
+  "put new opcode in cpu for dynamic var"
   (assoc-in cpu [:opcode] opcode))
 
 (defn mem-insert [cpu position val]
