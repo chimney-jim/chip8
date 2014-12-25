@@ -1,22 +1,24 @@
 (ns chip8.cpu
-  (:require [chip8.util :refer [sized-vec]]
-            [clojure.java.io :refer [input-stream]]))
+  (:require [chip8.util :as util]
+            [clojure.java.io :refer [input-stream]])
+  (:import [org.apache.commons.codec.binary Hex]
+           [org.apache.commons.io IOUtils]))
 
 (defrecord CPU [opcode memory Vreg Ireg pc gfx delay-timer sound-timer stack sp key])
 
 (defn build-cpu []
   "build a prepped cpu"
   (map->CPU {:opcode 0,
-             :memory (sized-vec 4096),
-             :Vreg (sized-vec 16),
+             :memory (util/sized-vec 4096),
+             :Vreg (util/sized-vec 16),
              :Ireg 0,
              :pc 0x200,
-             :gfx (sized-vec (* 64 32)),
+             :gfx (util/sized-vec (* 64 32)),
              :delay-timer 0,
              :sound-timer 0,
-             :stack (sized-vec 16),
+             :stack (util/sized-vec 16),
              :sp 0,
-             :key (sized-vec 16)}))
+             :key (util/sized-vec 16)}))
 
 (defn change-opcode [cpu opcode]
   "put new opcode in cpu for dynamic var"
@@ -69,8 +71,8 @@
            inner-cpu cpu]
       (if (not= c -1)
         (do
-          (println "i = " i " c = " c)
-          (recur (.read in) (+ i 1) (mem-insert inner-cpu i c)))
+          (println "i = " i " c = " (util/int->hex-str c))
+          (recur (.read in) (+ i 1) (mem-insert inner-cpu i (util/int->hex-str c))))
         inner-cpu))))
 
 (defn emulate-cycle [cpu]
