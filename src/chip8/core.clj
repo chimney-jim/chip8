@@ -1,4 +1,5 @@
 (ns chip8.core
+  (:require [chip8.cpu :as cpu])
   (:gen-class))
 
 (defn -main
@@ -7,10 +8,11 @@
   ;;(setup-graphics)
   ;;(setup-input)
 
+  (def cpu (atom cpu/build-pcu))
   ;;(init-cpu)
-  ;;(load-game game)
+  (swap! cpu cpu/load-game game)
   (while true
-   ;; (cpu-emulate-cycle)
+    (swap! cpu cpu/emulate-cycle)
     ;;(if (cpu :draw-flag) (draw-graphics))
     ;;(set-keys)
     )
