@@ -1,8 +1,6 @@
 (ns chip8.cpu
   (:require [chip8.util :as util]
-            [clojure.java.io :refer [input-stream]])
-  (:import [org.apache.commons.codec.binary Hex]
-           [org.apache.commons.io IOUtils]))
+            [clojure.java.io :refer [input-stream]]))
 
 (defrecord CPU [opcode memory Vreg Ireg pc gfx delay-timer sound-timer stack sp key])
 
@@ -52,11 +50,10 @@
   (-> cpu :memory (get pos)))
 
 (defn get-next-opcode [cpu]
-  "grab next opcode from memory at pc"
+  "grab the next opcode form memory"
   (let [pc (:pc cpu)
         memory (:memory cpu)]
-    (bit-or
-     (bit-shift-left (get memory pc) 8) (get memory (+ pc 1)))))
+    (str (memory pc) (memory (+ pc 1)))))
 
 (defn inc-pc [cpu]
   "increments the pc by two since two spots in memory are needed to form an opcode"
@@ -71,7 +68,6 @@
            inner-cpu cpu]
       (if (not= c -1)
         (do
-          (println "i = " i " c = " (util/int->hex-str c))
           (recur (.read in) (+ i 1) (mem-insert inner-cpu i (util/int->hex-str c))))
         inner-cpu))))
 
