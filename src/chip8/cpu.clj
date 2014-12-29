@@ -1,5 +1,6 @@
 (ns chip8.cpu
   (:require [chip8.util :as util]
+            [chip8.cpu-operations :as cpu-ops]
             [clojure.java.io :refer [input-stream]]))
 
 (defrecord CPU [opcode memory Vreg Ireg pc gfx delay-timer sound-timer stack sp key])
@@ -14,51 +15,10 @@
              :gfx (util/sized-vec (* 64 32)),
              :delay-timer 0,
              :sound-timer 0,
-             :stack (util/sized-vec 16),
+             :stack '(),
              :sp 0,
              :key (util/sized-vec 16)}))
 
-(defn change-opcode [cpu opcode]
-  "put new opcode in cpu for dynamic var"
-  (assoc-in cpu [:opcode] opcode))
-
-(defn dec-timers [cpu]
-  "decrement the delay and sound timers if their value is > 0"
-  (let [d-timer (:delay-timer cpu)
-        s-timer (:sound-timer cpu)]
-    (cond
-     (= d-timer s-timer 0) cpu
-     (not= d-timer s-timer 0) (-> cpu
-               (assoc-in [:delay-timer] (dec d-timer))
-               (assoc-in [:sound-timer] (dec s-timer)))
-     (not= d-timer 0) (-> cpu (assoc-in [:delay-timer] (dec d-timer)))
-     (not= s-timer 0) (-> cpu (assoc-in [:sound-timer] (dec s-timer))))))
-
-(defn set-delay-timer [cpu val]
-  (-> cpu (assoc-in [:delay-timer] val)))
-
-(defn set-sound-timer [cpu val]
-  (-> cpu (assoc-in [:sound-timer] val)))
-
-(defn mem-insert [cpu pos val]
-  "insert value into memory"
-  (let [memory (:memory cpu)]
-    (assoc-in cpu [:memory] (assoc memory pos val))))
-
-(defn mem-get [cpu pos]
-  "grabs the value at the position in memory"
-  (-> cpu :memory (get pos)))
-
-(defn get-next-opcode [cpu]
-  "grab the next opcode form memory"
-  (let [pc (:pc cpu)
-        memory (:memory cpu)]
-    (str (memory pc) (memory (+ pc 1)))))
-
-(defn inc-pc [cpu]
-  "increments the pc by two since two spots in memory are needed to form an opcode"
-  (let [curr-pc (:pc cpu)]
-    (assoc-in cpu [:pc] (+ curr-pc 2))))
 
 (defn load-game [cpu game-path]
   "loads a game into the system"
@@ -68,12 +28,12 @@
            inner-cpu cpu]
       (if (not= c -1)
         (do
-          (recur (.read in) (+ i 1) (mem-insert inner-cpu i (util/int->hex-str c))))
+          (recur (.read in) (+ i 1) (cpu-ops/mem-insert inner-cpu i (util/int->hex-str c))))
         inner-cpu))))
 
 (defn emulate-cycle [cpu]
   "emulates one cycle of the cpu"
-  (let [opcode (get-next-opcode cpu)])
+  (let [opcode (cpu-ops/get-next-opcode cpu)])
   ;;decode opcode
   ;;execute opcode
 
