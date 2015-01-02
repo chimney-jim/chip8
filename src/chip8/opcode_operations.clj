@@ -27,3 +27,30 @@
     (if (= VX-val val)
       (pc-inc cpu)
       cpu)))
+
+(defn skip-if-not-eq [cpu vx val]
+  "The interpreter compares register Vx to kk, and if they are not equal, increments the program counter by 2."
+  (let [vx-val (Vreg-get vx)]
+    (if (not= vx-val val)
+      (pc-inc cpu)
+      cpu)))
+
+(defn skip-if-vx-vy [cpu vx vy]
+  "The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2."
+  (let [vx-val (Vreg-get vx)
+        vy-val (Vreg-get vy)]
+    (if (= vx-val vy-val)
+      (pc-inc)
+      cpu)))
+
+(defn vreg-set [cpu vx val]
+  "The interpreter puts the value kk into register Vx."
+  (Vreg-set cpu vx val))
+
+(defn vreg-add [cpu vx val]
+  "Adds the value kk to the value of register Vx, then stores the result in Vx."
+  (let [vx-val (Vreg-get cpu vx)]
+    (Vreg-set cpu vx (conj vx val))))
+
+(defn vreg-get [cpu vx]
+  (Vreg-get cpu vx))

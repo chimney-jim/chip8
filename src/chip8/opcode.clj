@@ -3,7 +3,7 @@
 
 (defn handle-opcode [cpu opcode]
   (let [first (subs opcode 0)
-        rest (subs opcode 1 3)]
+        rest (subs opcode 1 4)]
     (case first
       "0" (case rest
             "0E0" (println "clear screen")
@@ -11,14 +11,27 @@
             ("call RCA 1802 program at address NNN"))
       "1" (op-ops/jump cpu rest)
       "2" (op-ops/call-subroutine cpu rest)
-      "3" (op-ops/skip-if-eq)
-      "4" (println "skips the next subroutine if VX doesn't equal NN")
-      "5" (println "skips the next instruction if VX equals VY")
-      "6" (println "Sets VX to NN")
-      "7" (println "Adds NN to VX")
-      "8" (let [last (opcode 4)]
+      "3" (let [vx (subs opcode 1 2)
+                val (subs opcode 2 4)]
+            (op-ops/skip-if-eq))
+      "4" (let [vx (subs opcode 1 2)
+                val (subs opcode 2 4)]
+            (op-ops/skip-if-not-eq))
+      "5" (let [vx (subs opcode 1 2)
+                vy (subs opcode 2 3)]
+            (op-ops/skip-if-vx-vy cpu vx vy))
+      "6" (let [vx (subs opcode 1 2)
+                val (subs opcode 2 4)]
+            (op-ops/vreg-set cpu vx val))
+      "7" (let [vx (subs opcode 1 2)
+                val (subs opcode 2 4)]
+            (op-ops/vreg-add cpu vx val))
+      "8" (let [last (subs opcode 3 4)
+                vx (subs opcode 1 2)
+                vy (subs opcode 2 3)]
             (case last
-              "0" (println "set VX to VY")
+              "0" (let [vy-val (op-ops/vreg-get [cpu vy])]
+                    (op-ops/vreg-set cpu vx vy-val))
               "1" (println "set VX to VX or VY")
               "2" (println "set VX to VX and VY")
               "3" (println "set VX to VX xor VY")

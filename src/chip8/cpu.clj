@@ -28,7 +28,7 @@
            inner-cpu cpu]
       (if (not= c -1)
         (do
-          (recur (.read in) (+ i 1) (cpu-ops/mem-insert inner-cpu i (util/int->hex-str c))))
+          (recur (.read in) (+ i 1) (cpu-ops/mem-insert inner-cpu i c)))
         inner-cpu))))
 
 (defn emulate-cycle [cpu]

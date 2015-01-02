@@ -1,8 +1,5 @@
 (ns chip8.cpu-operations
-  (:require [chip8.opcode :as opcode]))
-
-(defn handle-opcode [cpu opcode]
-  (opcode/handle-opcode cpu opcode))
+  (:require [chip8.util :as util]))
 
 (defn change-opcode [cpu opcode]
   "put new opcode in cpu for dynamic var"
@@ -36,17 +33,16 @@
   (-> cpu :memory (get pos)))
 
 (defn get-next-opcode [cpu]
-  "grab the next opcode form memory"
   (let [pc (:pc cpu)
         memory (:memory cpu)]
-    (str (memory pc) (memory (+ pc 1)))))
+    (util/int->hex-str (bit-or (bit-shift-left (memory pc) 8) (memory (+ pc 1))))))
 
-(defn inc-pc [cpu]
+(defn pc-inc [cpu]
   "increments the pc by two since two spots in memory are needed to form an opcode"
   (let [curr-pc (:pc cpu)]
     (assoc-in cpu [:pc] (+ curr-pc 2))))
 
-(defn set-pc [cpu val]
+(defn pc-set [cpu val]
   (assoc-in cpu [:pc] val))
 
 (defn stack-push [cpu val]
@@ -60,13 +56,23 @@
 
 (defn stack-get [cpu]
   "get top item off stack"
-  (first (:stack @cpu)))
+  (first (:stack cpu)))
 
-(defn dec-sp [cpu]
+(defn sp-dec [cpu]
   (let [sp (:sp cpu)]
     (if (= sp 0)
       sp
       (assoc-in cpu [:sp] (dec sp)))))
 
-(defn set-sp [cpu val]
+(defn sp-inc [cpu]
+  (let [sp (:sp cpu)]
+    (assoc-in cpu [:sp] (inc sp))))
+
+(defn sp-set [cpu val]
   (assoc-in cpu [:sp] val))
+
+(defn Vreg-get [cpu vx]
+  (get (:Vreg cpu) vx))
+
+(defn Vreg-set [cpu vx val]
+  (assoc-in cpu [:Vreg vx] val))
