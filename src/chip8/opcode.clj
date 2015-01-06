@@ -1,5 +1,6 @@
 (ns chip8.opcode
-  (:require [chip8.opcode-operations :as op-ops]))
+  (:require [chip8.opcode-operations :as op-ops]
+            [chip8.util              :as util]))
 
 (defn handle-opcode [cpu opcode]
   (let [first (subs opcode 0)
@@ -13,7 +14,7 @@
       "2" (op-ops/call-subroutine cpu rest)
       "3" (let [vx (subs opcode 1 2)
                 val (subs opcode 2 4)]
-            (op-ops/skip-if-eq))
+            (op-ops/skip-if-eq cpu vx val))
       "4" (let [vx (subs opcode 1 2)
                 val (subs opcode 2 4)]
             (op-ops/skip-if-not-eq))
@@ -24,23 +25,64 @@
                 val (subs opcode 2 4)]
             (op-ops/vreg-set cpu vx val))
       "7" (let [vx (subs opcode 1 2)
+                vx-val (op-ops/vreg-get cpu vx)
                 val (subs opcode 2 4)]
-            (op-ops/vreg-add cpu vx val))
+            (op-ops/vreg-set cpu vx (+ vx val)))
       "8" (let [last (subs opcode 3 4)
                 vx (subs opcode 1 2)
-                vy (subs opcode 2 3)]
+                vy (subs opcode 2 3)
+                vx-val (op-ops/vreg-get cpu vx)
+                vy-val (op-ops/vreg-get cpu vy)]
             (case last
-              "0" (let [vy-val (op-ops/vreg-get [cpu vy])]
-                    (op-ops/vreg-set cpu vx vy-val))
-              "1" (println "set VX to VX or VY")
-              "2" (println "set VX to VX and VY")
-              "3" (println "set VX to VX xor VY")
-              "4" (println "adds VY to VX. VF is set to 1 when there's a carry, and to 0 when there isn't.")
-              "5" (println "VY is subtracted from VX. VF is set to 0 when there's a borrow, and 1 when there isn't")
-              "6" (println "Shifts VX right by one. VF is set to the value of the least significant bit of VX before the shift")
-              "7" (println "Sets VX to VY minus VX. VF is set to 0 when there's a borrow, and 1 when there isn't.")
-              "E" (println "Shifts VX left by one. VF is set to the value of the most significant bit of VX before the shift")))
-      "9" (println "Skips the next instruction if VX doesn't equal VY.")
+              "0" (op-ops/vreg-set cpu vx vy-val)
+              "1" (op-ops/vreg-set cpu vx (bit-or vx-val vy-val))
+              "2" (op-ops/vreg-set cpu vx (bit-and vx-val vy-val))
+              "3" (op-ops/vreg-set cpu vx (bit-xor vx-val vy-val))
+              "4" (let [added-val (+ vx-val vy-val)]
+                    (if (> added-val 255)
+                      (-> cpu
+                          (op-ops/vreg-set vx (remove-carry added-val))
+                          (op-ops/vreg-set "F" "1"))
+                      (-> cpu
+                          (op-ops/vreg-set vx added-val)
+                          (op-ops/vreg-set "F" "0"))))
+              "5" (let [subbed-val (- vx-val vy-val)]
+                    (if (> vx-val vy-val)
+                      (-> cpu
+                          (op-ops/vreg-set "F" "1")
+                          (op-ops/vreg-set vx subbed-val))
+                      (-> cpu
+                          (op-ops/vreg-set "F" "0")
+                          (op-ops/vreg-set vx subbed-val))))
+              "6" (let [vx-lsb (get-lsb vx-val)]
+                    (if (= vx-lsb "1")
+                      (-> cpu
+                          (op-ops/vreg-set "F" "1")
+                          (op-ops/vreg-set vx (bit-shift-right vx-val 1)))
+                      (-> cpu
+                          (op-ops/vreg-set "F" "0")
+                          (op-ops/vreg-set vx (bit-shift-right vx-val 1)))))
+              "7" (let [subbed-val (- vy-val vx-val)]
+                    (if (> vy-val vx-val)
+                      (-> cpu
+                          (op-ops/vreg-set "F" "1")
+                          (op-ops/vreg-set vx subbed-val))
+                      (-> cpu
+                          (op-ops/vreg-set "F" "0")
+                          (op-ops/vreg-set vx subbed-val))))
+              "E" (let [msb (get-msb vx-val)]
+                    (do
+                      (op-ops/vreg-set cpu vx (bit-shift-left vx-val 1))
+                      (if (= msb "1")
+                        (op-ops/vreg-set cpu "F" "1")
+                        (op-ops/vreg-set cpu "F" "0"))))))
+      "9" (let [vx (subs opcode 1 2)
+                vy (subs opcode 2 3)
+                vx-val (op-ops/vreg-get cpu vx)
+                vy-val (op-ops/vreg-get cpu vy)]
+            (if (not= vx-val vy-val)
+              (op-ops/skip-instruction cpu)
+              cpu))
       "A" (println "Sets I to the address NNN.")
       "B" (println "Jumps to the address NNN plus V0.")
       "C" (println "Sets VX to a random number and NN.")
@@ -60,3 +102,12 @@
               "33" (println "Stores the Binary-coded decimal representation of VX, with the most significant of three digits at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2. (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)")
               "55" (println "Stores V0 to VX in memory starting at address I.")
               "65" (println "Fills V0 to VX with values from memory starting at address I"))))))
+
+(defn remove-carry [val]
+  (Integer/parseInt (subs (Integer/toBinaryString val) 1 9) 2))
+
+(defn get-lsb [val]
+  (subs (Integer/toBinaryString val) 8 9))
+
+(defn get-msb [val]
+  (subs (Integer/toBinaryString val) 0 1))
