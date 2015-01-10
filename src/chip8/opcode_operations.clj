@@ -59,3 +59,9 @@
 
 (defn skip-instruction [cpu]
   (pc-inc cpu))
+
+(defn ireg-set [cpu val]
+  (Ireg-set cpu (hex-str->int val)))
+
+(defn ireg-get [cpu]
+  (Ireg-get cpu))

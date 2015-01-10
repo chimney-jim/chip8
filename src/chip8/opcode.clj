@@ -2,6 +2,16 @@
   (:require [chip8.opcode-operations :as op-ops]
             [chip8.util              :as util]))
 
+(defn remove-carry [val]
+  (Integer/parseInt (subs (Integer/toBinaryString val) 1 9) 2))
+
+(defn get-lsb [val]
+  (subs (Integer/toBinaryString val) 8 9))
+
+(defn get-msb [val]
+  (subs (Integer/toBinaryString val) 0 1))
+
+
 (defn handle-opcode [cpu opcode]
   (let [first (subs opcode 0)
         rest (subs opcode 1 4)]
@@ -83,9 +93,11 @@
             (if (not= vx-val vy-val)
               (op-ops/skip-instruction cpu)
               cpu))
-      "A" (println "Sets I to the address NNN.")
-      "B" (println "Jumps to the address NNN plus V0.")
-      "C" (println "Sets VX to a random number and NN.")
+      "A" (op-ops/ireg-set cpu rest)
+      "B" (op-ops/vreg-set cpu 0 rest)
+      "C" (let [register (subs opcode 1 2)
+                kk (subs opcode 2 4)]
+            (op-ops/vreg-set cpu register (bit-and )))
       "D" (println "Sprites stored in memory at location in index register (I), maximum 8bits wide. Wraps around the screen. If when drawn, clears a pixel, register VF is set to 1 otherwise it is zero. All drawing is XOR drawing (i.e. it toggles the screen pixels)")
       "E" (let [last-two (subs opcode 2 4)]
             (case last-two
@@ -102,12 +114,3 @@
               "33" (println "Stores the Binary-coded decimal representation of VX, with the most significant of three digits at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2. (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)")
               "55" (println "Stores V0 to VX in memory starting at address I.")
               "65" (println "Fills V0 to VX with values from memory starting at address I"))))))
-
-(defn remove-carry [val]
-  (Integer/parseInt (subs (Integer/toBinaryString val) 1 9) 2))
-
-(defn get-lsb [val]
-  (subs (Integer/toBinaryString val) 8 9))
-
-(defn get-msb [val]
-  (subs (Integer/toBinaryString val) 0 1))

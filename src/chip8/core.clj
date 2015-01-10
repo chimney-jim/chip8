@@ -8,7 +8,7 @@
   ;;(setup-graphics)
   ;;(setup-input)
 
-  (def cpu (atom cpu/build-pcu))
+  (def cpu (atom cpu/build-cpu))
   ;;(init-cpu)
   (swap! cpu cpu/load-game game)
   (while true

@@ -76,3 +76,9 @@
 
 (defn Vreg-set [cpu vx val]
   (assoc-in cpu [:Vreg vx] val))
+
+(defn Ireg-set [cpu val]
+  (assoc-in cpu [:Ireg] val))
+
+(defn Ireg-get [cpu]
+  (:Ireg cpu))
