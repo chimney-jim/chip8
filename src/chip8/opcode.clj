@@ -1,6 +1,5 @@
 (ns chip8.opcode
-  (:require [chip8.opcode-operations :as op-ops]
-            [chip8.util              :as util]))
+  (:require [chip8.opcode-operations :as op-ops]))
 
 (defn remove-carry [val]
   (Integer/parseInt (subs (Integer/toBinaryString val) 1 9) 2))
@@ -27,7 +26,7 @@
             (op-ops/skip-if-eq cpu vx val))
       "4" (let [vx (subs opcode 1 2)
                 val (subs opcode 2 4)]
-            (op-ops/skip-if-not-eq))
+            (op-ops/skip-if-not-eq cpu vx val))
       "5" (let [vx (subs opcode 1 2)
                 vy (subs opcode 2 3)]
             (op-ops/skip-if-vx-vy cpu vx vy))
@@ -97,7 +96,7 @@
       "B" (op-ops/vreg-set cpu 0 rest)
       "C" (let [register (subs opcode 1 2)
                 kk (subs opcode 2 4)]
-            (op-ops/vreg-set cpu register (bit-and )))
+            (op-ops/vreg-set cpu register (bit-and kk (rand-int 256))))
       "D" (println "Sprites stored in memory at location in index register (I), maximum 8bits wide. Wraps around the screen. If when drawn, clears a pixel, register VF is set to 1 otherwise it is zero. All drawing is XOR drawing (i.e. it toggles the screen pixels)")
       "E" (let [last-two (subs opcode 2 4)]
             (case last-two
@@ -105,9 +104,12 @@
               "A1" (println "Skips the next instruction if the key stored in VX isn't pressed.")))
       "F" (let [last-two (subs opcode 2 4)]
             (case last-two
-              "07" (println "Sets VX to the value of the delay timer.")
+              "07" (let [vx (subs opcode 1 2)]
+                        (op-ops/vreg-set cpu vx (:delay-timer cpu)))
               "0A" (println "A key press is awaited, and then stored in VX.")
-              "15" (println "Sets the delay timer to VX.")
+              "15" (let [vx (subs opcode 1 2)
+                         vx-val (op-ops/vreg-get cpu vx)]
+                     (op-ops/set-delay-t cpu vx-val))
               "18" (println "Sets the sound timer to VX.")
               "1E" (println "Adds VX to I.")
               "29" (println "Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.")

@@ -3,7 +3,8 @@
             [chip8.cpu-operations :as cpu-ops]
             [clojure.java.io :refer [input-stream]]))
 
-(defrecord CPU [opcode memory Vreg Ireg pc gfx delay-timer sound-timer stack sp key])
+(defrecord CPU [opcode memory Vreg Ireg pc gfx delay-timer sound-timer stack sp key]
+  )
 
 (defn build-cpu []
   "build a prepped cpu"

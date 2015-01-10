@@ -18,6 +18,9 @@
      (not= s-timer 0) (-> cpu (assoc-in [:sound-timer] (dec s-timer))))))
 
 (defn set-delay-timer [cpu val]
+  (assoc-in cpu [:delay-timer] val))
+
+(defn set-delay-timer [cpu val]
   (-> cpu (assoc-in [:delay-timer] val)))
 
 (defn set-sound-timer [cpu val]
