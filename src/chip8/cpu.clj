@@ -2,12 +2,12 @@
   (:require [chip8.util :as util]
             [clojure.java.io :refer [input-stream]]))
 
-(defprotocol cpu
+(defprotocol Chip8
   (load-game [this game-path] "loads a game into the system")
   (change-opcode [this opcode] "put new opcode in cpu for dynamic var")
+  (dec-timer [this timer])
   (dec-timers [this] "decrement the delay and sound timers if their value is > 0")
-  (set-delay-timer [this val])
-  (set-sound-timer [this val])
+  (set-timer [this timer val])
   (mem-insert [this pos val])
   (mem-get [this pos])
   (get-next-opcode [this])
@@ -25,7 +25,7 @@
   (ireg-set [this val]))
 
 (defrecord chip8-cpu [opcode memory Vreg Ireg pc gfx delay-timer sound-timer stack sp key]
-  cpu
+  Chip8
   (load-game [this game-path]
     (with-open [in (input-stream game-path)]
       (loop [c (.read in)
@@ -37,28 +37,28 @@
           inner-cpu))))
   (change-opcode [this opcode]
     (assoc-in this [:opcode] opcode))
+  (dec-timer [this timer]
+    (assoc-in this [(keyword timer)] (dec ((keyword timer) this))))
   (dec-timers [this]
-    (let [d-timer (:delay-timer this)
-          s-timer (:sound-timer this)]
+    (let [dt (:delay-timer this)
+          st (:sound-timer this)]
       (cond
-        (= d-timer s-timer 0) this
-        (not= d-timer s-timer 0) (-> this
-                                     (assoc-in [:delay-timer] (dec d-timer))
-                                     (assoc-in [:sound-timer] (dec s-timer)))
-        (not= d-timer 0) (-> this (assoc-in [:delay-timer] (dec d-timer)))
-        (not= s-timer 0) (-> this (assoc-in [:sound-timer] (dec s-timer))))))
-  (set-delay-timer [this val]
-    (assoc-in this [:delay-timer] val))
-  (set-sound-timer [this val]
-    (assoc-in this [:sound-timer] val))
+        (not= dt st 0) (-> this
+                           (dec-timer "delay-timer")
+                           (dec-timer "sound-timer"))
+        (= dt st 0) this
+        (not= dt 0) (dec-timer this "delay-timer")
+        (not= st 0) (dec-timer this "sound-timer"))))
+  (set-timer [this timer val]
+    (assoc-in this [(keyword timer)] val))
   (mem-insert [this pos val]
     (let [memory (:memory this)]
       (assoc-in this [:memory] (assoc memory pos val))))
   (mem-get [this pos]
     (get (:memory this) pos))
   (get-next-opcode [this]
-    (let [pc (:pc cpu)
-          memory (:memory cpu)]
+    (let [pc (:pc this)
+          memory (:memory this)]
       (bit-or (bit-shift-left (memory pc) 8) (memory (+ pc 1)))))
   (pc-inc [this]
     (let [curr-pc (:pc this)]

@@ -102,17 +102,20 @@
             (case last-two
               "9E" (println "Skips the next instruction if the key stored in VX is pressed.")
               "A1" (println "Skips the next instruction if the key stored in VX isn't pressed.")))
-      "F" (let [last-two (subs opcode 2 4)]
+      "F" (let [last-two (subs opcode 2 4)
+                vx (subs opcode 1 2)]
             (case last-two
-              "07" (let [vx (subs opcode 1 2)]
-                        (op-ops/vreg-set cpu vx (:delay-timer cpu)))
+              "07" (op-ops/vreg-set cpu vx (:delay-timer cpu))
               "0A" (println "A key press is awaited, and then stored in VX.")
-              "15" (let [vx (subs opcode 1 2)
+              "15" (let [vx-val (op-ops/vreg-get cpu vx)]
+                     (op-ops/set-delay-timer cpu vx-val))
+              "18" (let [vx-val (op-ops/vreg-get cpu vx)]
+                     (op-ops/set-sound-timer cpu vx-val))
+              "1E" (let [ireg-val (op-ops/ireg-get cpu)
                          vx-val (op-ops/vreg-get cpu vx)]
-                     (op-ops/set-delay-t cpu vx-val))
-              "18" (println "Sets the sound timer to VX.")
-              "1E" (println "Adds VX to I.")
+                     (op-ops/ireg-set cpu (+ ireg-val vx-val)))
               "29" (println "Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.")
               "33" (println "Stores the Binary-coded decimal representation of VX, with the most significant of three digits at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2. (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)")
-              "55" (println "Stores V0 to VX in memory starting at address I.")
+              "55" ()
+              (println "Stores V0 to VX in memory starting at address I.")
               "65" (println "Fills V0 to VX with values from memory starting at address I"))))))
