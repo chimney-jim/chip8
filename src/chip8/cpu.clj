@@ -59,7 +59,7 @@
   (get-next-opcode [this]
     (let [pc (:pc this)
           memory (:memory this)]
-      (bit-or (bit-shift-left (memory pc) 8) (memory (+ pc 1)))))
+      (bit-or (bit-shift-left (mem-get memory pc) 8) (mem-get memory (+ pc 1)))))
   (pc-inc [this]
     (let [curr-pc (:pc this)]
       (assoc-in this [:pc] (+ curr-pc 2))))
