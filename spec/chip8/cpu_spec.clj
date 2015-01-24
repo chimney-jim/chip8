@@ -24,7 +24,27 @@
                           (set-timer "sound-timer" 3))
             timer-dec-cpu (dec-timers base-cpu)]
         (should= 4 (:delay-timer timer-dec-cpu))
-        (should= 2 (:sound-timer timer-dec-cpu))))
+        (should= 2 (:sound-timer timer-dec-cpu))))  
+  
+  (it "should decrement delay timer"
+      (let [base-cpu (-> (build-cpu)
+                          (set-timer "delay-timer" 5))
+            timer-dec-cpu (dec-timers base-cpu)]
+        (should= 4 (:delay-timer timer-dec-cpu))
+        (should= 0 (:sound-timer timer-dec-cpu))))  
+  
+  (it "should decrement delay timer"
+      (let [base-cpu (-> (build-cpu)
+                          (set-timer "sound-timer" 5))
+            timer-dec-cpu (dec-timers base-cpu)]
+        (should= 0 (:delay-timer timer-dec-cpu))
+        (should= 4 (:sound-timer timer-dec-cpu))))  
+  
+  (it "should not decrement timer"
+      (let [base-cpu (-> (build-cpu))
+            timer-dec-cpu (dec-timers base-cpu)]
+        (should= 0 (:delay-timer timer-dec-cpu))
+        (should= 0 (:sound-timer timer-dec-cpu))))
   
   (it "should insert item into memory"
       (let [base-cpu (build-cpu)
@@ -37,7 +57,10 @@
         (should= 123 (mem-get cpu-with-mem 3))))
   
   (it "should get next opcode"
-      )
+      (let [basic-cpu (-> (build-cpu)
+                          (mem-insert 512 0xa2)
+                          (mem-insert 513 0xf0))]
+        (should= 41712 (get-next-opcode basic-cpu))))
 )
 
 (run-specs)

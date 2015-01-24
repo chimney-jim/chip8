@@ -43,12 +43,12 @@
     (let [dt (:delay-timer this)
           st (:sound-timer this)]
       (cond
-        (not= dt st 0) (-> this
-                           (dec-timer "delay-timer")
-                           (dec-timer "sound-timer"))
-        (= dt st 0) this
-        (not= dt 0) (dec-timer this "delay-timer")
-        (not= st 0) (dec-timer this "sound-timer"))))
+        (= dt st 0)                   this
+        (and (not= dt 0) (not= st 0)) (-> this 
+                                          (dec-timer "delay-timer") 
+                                          (dec-timer "sound-timer"))
+        (and (not= dt 0) (= st 0))    (dec-timer this "delay-timer")
+        (and (not= st 0 (= dt 0)))    (dec-timer this "sound-timer"))))
   (set-timer [this timer val]
     (assoc-in this [(keyword timer)] val))
   (mem-insert [this pos val]
@@ -57,9 +57,8 @@
   (mem-get [this pos]
     (get (:memory this) pos))
   (get-next-opcode [this]
-    (let [pc (:pc this)
-          memory (:memory this)]
-      (bit-or (bit-shift-left (mem-get memory pc) 8) (mem-get memory (+ pc 1)))))
+    (let [pc (:pc this)]
+      (bit-or (bit-shift-left (mem-get this pc) 8) (mem-get this (+ pc 1)))))
   (pc-inc [this]
     (let [curr-pc (:pc this)]
       (assoc-in this [:pc] (+ curr-pc 2))))
@@ -98,7 +97,7 @@
                    :memory (util/sized-vec 4096),
                    :Vreg (util/sized-vec 16),
                    :Ireg 0,
-                   :pc 0x200,
+                   :pc 0x200, ;memory location 512
                    :gfx (util/sized-vec (* 64 32)),
                    :delay-timer 0,
                    :sound-timer 0,
