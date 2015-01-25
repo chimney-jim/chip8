@@ -15,7 +15,7 @@
   (pc-set [this val])
   (stack-push [this val])
   (stack-pop [this] "returns cpu with item on top of stack removed")
-  (stack-get [this])
+  (stack-peek [this])
   (sp-inc [this])
   (sp-dec [this])
   (sp-set [this val])
@@ -35,10 +35,13 @@
           (do
             (recur (.read in) (+ i 1) (mem-insert inner-cpu i c)))
           inner-cpu))))
+  
   (change-opcode [this opcode]
     (assoc-in this [:opcode] opcode))
+  
   (dec-timer [this timer]
     (assoc-in this [(keyword timer)] (dec ((keyword timer) this))))
+  
   (dec-timers [this]
     (let [dt (:delay-timer this)
           st (:sound-timer this)]
@@ -49,45 +52,61 @@
                                           (dec-timer "sound-timer"))
         (and (not= dt 0) (= st 0))    (dec-timer this "delay-timer")
         (and (not= st 0 (= dt 0)))    (dec-timer this "sound-timer"))))
+  
   (set-timer [this timer val]
     (assoc-in this [(keyword timer)] val))
+  
   (mem-insert [this pos val]
     (let [memory (:memory this)]
       (assoc-in this [:memory] (assoc memory pos val))))
+  
   (mem-get [this pos]
     (get (:memory this) pos))
+  
   (get-next-opcode [this]
     (let [pc (:pc this)]
       (bit-or (bit-shift-left (mem-get this pc) 8) (mem-get this (+ pc 1)))))
+  
   (pc-inc [this]
     (let [curr-pc (:pc this)]
       (assoc-in this [:pc] (+ curr-pc 2))))
+  
   (pc-set [this val]
     (assoc-in this [:pc] val))
+  
   (stack-push [this val]
     (let [stack (:stack this)]
       (assoc-in this [:stack] (conj stack val))))
+  
   (stack-pop [this]
     (let [stack (:stack this)]
       (assoc-in this [:stack] (pop stack))))
-  (stack-get [this]
-    (first (:stack this)))
+  
+  (stack-peek [this]
+    (peek (:stack this)))
+  
   (sp-inc [this]
     (let [sp (:sp this)]
       (assoc-in this [:sp] (inc sp))))
+  
   (sp-dec [this]
     (let [sp (:sp this)]
       (if (= sp 0)
         this
         (assoc-in this [:sp] (dec sp)))))
+  
   (sp-set [this val]
     (assoc-in this [:sp] val))
+  
   (vreg-get [this vreg]
     (get (:Vreg this) vreg))
+  
   (vreg-set [this vreg val]
     (assoc-in this [:Vreg vreg] val))
+  
   (ireg-get [this]
     (:Ireg this))
+  
   (ireg-set [this val]
     (assoc-in this [:Ireg] val)))
 
@@ -101,9 +120,10 @@
                    :gfx (util/sized-vec (* 64 32)),
                    :delay-timer 0,
                    :sound-timer 0,
-                   :stack '(),
-                   :sp 0,
-                   :key (util/sized-vec 16)}))
+                   :stack '()',
+                   :sp 0, ;index pointer to postition in
+                   :key (util/sized-vec 16)
+                   }))
 
 (defn emulate-cycle [cpu]
   "emulates one cycle of the cpu"
