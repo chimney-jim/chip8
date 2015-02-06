@@ -29,7 +29,7 @@
             (op-ops/skip-if-not-eq cpu vx val))
       "5" (let [vx (subs opcode 1 2)
                 vy (subs opcode 2 3)]
-            (op-ops/skip-if-vx-vy cpu vx vy))
+            (op-ops/skip-if-vx-vy-eq cpu vx vy))
       "6" (let [vx (subs opcode 1 2)
                 val (subs opcode 2 4)]
             (op-ops/vreg-set cpu vx val))

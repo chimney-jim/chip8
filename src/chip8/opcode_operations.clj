@@ -14,20 +14,21 @@
 
 (defn return-from-subroutine [cpu]
   "The interpreter sets the program counter to the address at the top of the stack,then subtracts 1 from the stack pointer."
-  (let [addr (chip8/stack-get cpu)]
+  (let [addr (chip8/stack-peek cpu)]
     (-> cpu
-        (chip8/sp-set addr)
+        (chip8/pc-set addr)
         (chip8/stack-pop)
         (chip8/sp-dec))))
 
 (defn jump [cpu addr]
   "The interpreter sets the program counter to nnn."
-  (chip8/pc-set cpu addr))
+  (let [int-addr (hex-str->int addr)] 
+    (chip8/pc-set cpu int-addr)))
 
-(defn call-subroutine [cpu hex-addr]
+(defn call-subroutine [cpu addr]
   "The interpreter increments the stack pointer, then puts the current PC on the top of the stack. The PC is then set to nnn."
   (let [pc-addr (:pc cpu)
-        int-addr (hex-str->int hex-addr)]
+        int-addr (hex-str->int addr)]
     (-> cpu
        (chip8/sp-inc)
        (chip8/stack-push pc-addr)
@@ -37,7 +38,7 @@
   "The interpreter compares register Vx to kk, and if they are equal, increments the program counter by 2."
   (let [vx-val (vreg-get cpu vx)
         int-val (hex-str->int hex-val)]
-    (if (= vx-val val)
+    (if (= vx-val int-val)
       (chip8/pc-inc cpu)
       cpu)))
 
@@ -49,7 +50,7 @@
       (chip8/pc-inc cpu)
       cpu)))
 
-(defn skip-if-vx-vy [cpu vx vy]
+(defn skip-if-vx-vy-eq [cpu vx vy]
   "The interpreter compares register Vx to register Vy, and if they are equal, increments the program counter by 2."
   (let [vx-val (vreg-get cpu vx)
         vy-val (vreg-get cpu vy)]
@@ -67,10 +68,10 @@
   (chip8/ireg-get cpu))
 
 (defn set-delay-timer [cpu val]
-  (chip8/set-delay-timer cpu (hex-str->int val)))
+  (chip8/set-timer cpu "delay-timer" (hex-str->int val)))
 
 (defn set-sound-timer [cpu val]
-  (chip8/set-sound-timer cpu val))
+  (chip8/set-timer cpu "sound-timer" val))
 
 (defn mem-set [cpu pos val]
   (let [memory (:memory cpu)]
