@@ -83,7 +83,23 @@
             cpu-skipped (skip-instruction cpu)]
         (should= 514 (:pc cpu-skipped))))
   
-;  (it "should set the I register"
-;      (let [cpu (cpu/build-cpu)
-;            cpu-ireg-set (ireg-set )]))
+  (it "should set the I register"
+      (let [cpu (cpu/build-cpu)
+            cpu-ireg-set (ireg-set cpu "a2")]
+        (should= 162 (:Ireg cpu-ireg-set))))
+  
+  (it "should get the I register"
+      (let [cpu (cpu/build-cpu)
+            cpu-ireg-set (cpu/ireg-set cpu 162)]
+        (should= 162 (ireg-get cpu-ireg-set))))
+  
+  (it "should set the delay timer"
+      (let [cpu (cpu/build-cpu)
+            cpu-delay-timer-set (set-delay-timer cpu "05")]
+        (should= 5 (:delay-timer cpu-delay-timer-set))))
+  
+  (it "should set the sound timer"
+      (let [cpu (cpu/build-cpu)
+            cpu-sound-timer-set (set-sound-timer cpu "05")]
+        (should= 5 (:sound-timer cpu-sound-timer-set))))
 )

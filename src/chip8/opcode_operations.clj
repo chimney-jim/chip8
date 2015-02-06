@@ -71,7 +71,7 @@
   (chip8/set-timer cpu "delay-timer" (hex-str->int val)))
 
 (defn set-sound-timer [cpu val]
-  (chip8/set-timer cpu "sound-timer" val))
+  (chip8/set-timer cpu "sound-timer" (hex-str->int val)))
 
 (defn mem-set [cpu pos val]
   (let [memory (:memory cpu)]
