@@ -1,6 +1,7 @@
 (ns chip8.opcode-operations
   (:require [chip8.cpu :as chip8]
-            [chip8.util :refer :all]))
+            [chip8.util :refer :all]
+            [chip8.cpu :as cpu]))
 
 (defn vreg-set [cpu vx val]
   "The interpreter puts the value kk into register Vx."
@@ -8,9 +9,9 @@
         int-val (hex-str->int val)]
     (chip8/vreg-set cpu int-vx int-val)))
 
-(defn vreg-get [cpu vx]
-  (let [int-vx (hex-str->int vx)]
-    (chip8/vreg-get cpu int-vx)))
+(defn vreg-get
+  ([cpu vx] (chip8/vreg-get cpu (hex-str->int vx)))
+  ([cpu start vx] (chip8/vreg-get cpu start (hex-str->int vx))))
 
 (defn return-from-subroutine [cpu]
   "The interpreter sets the program counter to the address at the top of the stack,then subtracts 1 from the stack pointer."
@@ -22,7 +23,7 @@
 
 (defn jump [cpu addr]
   "The interpreter sets the program counter to nnn."
-  (let [int-addr (hex-str->int addr)] 
+  (let [int-addr (hex-str->int addr)]
     (chip8/pc-set cpu int-addr)))
 
 (defn call-subroutine [cpu addr]
@@ -77,8 +78,23 @@
   (let [memory (:memory cpu)]
     (chip8/mem-insert cpu pos val)))
 
-(defn write-vxs-to-mem [cpu ireg-val]
-  (loop [vxs-list (reverse (into '() (:Vreg cpu)))
-         vx-val (vreg-get cpu (first vxs-list))
+(defn get-vxs
+  ([cpu v-end]
+   (get-vxs cpu 0 v-end))
+  ([cpu v-begin v-end]
+    (reverse (into '() (cpu/vreg-get cpu v-begin v-end)))))
+
+(defn write-vxs-to-mem [cpu vx ireg-val]
+  (loop [updated-cpu cpu
+         vxs (get-vxs cpu vx)
          pos ireg-val]
-    ()))
+    (if (empty? vxs)
+      updated-cpu
+      (recur (cpu/mem-insert updated-cpu pos (first vxs)) (rest vxs) (+ pos 1)))))
+
+;(defn write-mem-to-vxs [cpu vx ireg-val]
+;   (loop [updated-cpu cpu
+;          vxs (get-vxs cpu vx)
+;          mem-locs (cpu/mem-get )
+;          pos ireg-val]
+;     ))

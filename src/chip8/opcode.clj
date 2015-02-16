@@ -1,5 +1,6 @@
 (ns chip8.opcode
-  (:require [chip8.opcode-operations :as op-ops]))
+  (:require [chip8.opcode-operations :as op-ops]
+            [chip8.cpu :as cpu]))
 
 (defn remove-carry [val]
   (Integer/parseInt (subs (Integer/toBinaryString val) 1 9) 2))
@@ -113,9 +114,10 @@
                      (op-ops/set-sound-timer cpu vx-val))
               "1E" (let [ireg-val (op-ops/ireg-get cpu)
                          vx-val (op-ops/vreg-get cpu vx)]
-                     (op-ops/ireg-set cpu (+ ireg-val vx-val)))
+                     (cpu/ireg-set cpu (+ ireg-val vx-val)))
               "29" (println "Sets I to the location of the sprite for the character in VX. Characters 0-F (in hexadecimal) are represented by a 4x5 font.")
               "33" (println "Stores the Binary-coded decimal representation of VX, with the most significant of three digits at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2. (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.)")
-              "55" ()
-              (println "Stores V0 to VX in memory starting at address I.")
+              "55" (let [vxs (op-ops/vreg-get cpu 0 vx)
+                         ireg-val (op-ops/ireg-get cpu)]
+                     (op-ops/write-vxs-to-mem cpu ireg-val vxs))
               "65" (println "Fills V0 to VX with values from memory starting at address I"))))))
