@@ -6,7 +6,8 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/tools.namespace "0.2.8"]
                  [org.clojure/data.generators "0.1.2"]
-                 [speclj "3.1.0"]]
+                 [speclj "3.1.0"]
+                 [seesaw "1.4.5"]]
   :plugins  [[speclj "3.1.0"]]
   :test-paths ["spec"]
   :main ^:skip-aot chip8.core

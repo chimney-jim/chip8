@@ -116,5 +116,14 @@
                     (cpu/vreg-set 1 1)
                     (cpu/vreg-set 2 2)
                     (cpu/ireg-set 3))
-            cpu-mem-inserted (write-vxs-to-mem cpu 3 (ireg-get cpu))]
-        (should= [0 1 2] (subvec (:memory cpu-mem-inserted) 3 6)))))
+            cpu-mem-inserted (write-vxs-to-mem cpu 3)]
+        (should= [0 1 2] (subvec (:memory cpu-mem-inserted) 3 6))))
+  
+  (it "should write multiple values from memory into vxs starting at mem location ireg value"
+      (let [cpu (-> (cpu/build-cpu)
+                    (cpu/mem-insert 0 0)
+                    (cpu/mem-insert 1 1)
+                    (cpu/mem-insert 2 2))
+            cpu-vxs-set (write-mem-to-vxs cpu 3)]
+        (should= [0 1 2] (vreg-get cpu-vxs-set 0 2))))
+  )
